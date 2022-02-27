@@ -1,0 +1,42 @@
+<launch>
+
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+
+  <rosparam file="$(find car)/config/joint_states.yaml" command="load"/>
+
+  <rosparam file="$(find car)/config/moving_car.yaml" command="load"/>
+
+
+  <node name="robot_arm_controller" pkg="controller_manager" type="spawner"
+  respawn="true" output="screen" 
+   args="/Car_Model/joint_state_controller
+         /Car_Model/car_model_controller
+         --shutdown-timeout 3"/>
+
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find car)/urdf/car4.xacro" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  
+  
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+	args="-urdf -model car -param robot_description"/>
+
+  <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+  <param name="default_topic" value="/Car_Model/car_model_controller/cmd_vel"/> 
+</node>
+
+</launch>
